@@ -8,64 +8,76 @@ class Table:
         self.play()
 
     def play(self):
-        self.player1_turn()
-        self.player2_turn()
+        user_input = input("How many players for this round?\n")
+        try:
+            int(user_input)
+        except ValueError:
+            print("Wrong value, type an int!")
+        else:
+            self.player_count = int(user_input)
+            self.all_dice = []
+            self.players_hands = []
+            for turn in range(self.player_count):
+                self.player_turn(turn)
 
-    # TURNS TO REWRITE, 1 METHOD FOR ALL PLAYERS
-    def player1_turn(self):
-        self.player1_dice = []
+    def player_turn(self, turn):
+        player_dice = []
         for _ in range(5):
-            self.player1_dice.append(Dice())
-        print("player 1:")
-        self.print_hand(self.player1_dice)
-        self.choose_move(1)
-
-    def player2_turn(self):
-        pass
+            player_dice.append(Dice())
+        print(f"\nPlayer {turn + 1}:")
+        self.print_hand(player_dice)
+        self.all_dice.append(player_dice)
+        self.choose_move(turn)
 
     def hand_result(self, turn):
-        pass
+        values_counter = [0, 0, 0, 0, 0, 0]
+        # count all dice values in a set
+        for dice in self.all_dice[turn]:
+            values_counter[getattr(dice, "value")-1] += 1
+
 
     def parse_input(self, user_input, turn):
-        user_input = user_input.split()
-        if len(user_input) == 1:
-            try:
-                int(user_input[0])
-            except ValueError:
-                if user_input[0] == "pass":
-                    self.choose_winner(True, turn)
-                else:
-                    print("\nChosen wait\n")
-                    self.hand_result(turn)
-        else:
-            for number in user_input:
+        passed = False
+        waited = False
+        if user_input:
+            user_input = user_input.split()
+            for element in user_input:
                 try:
-                    int(number)
+                    int(element)
                 except ValueError:
-                    print("\nChosen wait\n")
-                    self.hand_result(turn)
+                    if element == "pass":
+                        self.players_hands.append("pass")
+                        passed = True
+                    else:
+                        print("\nChosen wait\n")
+                    break
+                else:
+                    element = int(element)
+                    if element in range(1, 6):
+                        self.re_roll(element, turn)
+        else:
+            print("\nChosen wait\n")
+        if not passed:
+            print(f"\nPlayer {turn+1}'s final hand:")
+            self.print_hand(self.all_dice[turn])
+            self.hand_result(turn)
 
     def choose_move(self, turn):
         user_input = input(self.next_move_string)
         self.parse_input(user_input, turn)
 
-    def re_roll(self, numbers):
+    def re_roll(self, number, turn):
+        self.all_dice[turn][number-1].roll()
+
+    def choose_winner(self):
         pass
 
-    def choose_winner(self, passed=False, player=0):
-        if passed == False:
-            pass
-        else:
-            if player == 1:
-                print("\nPlayer 2 won!\n")
-            else:
-                print("\nPlayer 1 won!\n")
-
-    def print_hand(self, set):
+    @staticmethod
+    def print_hand(dice_set):
         hand_rows = []
         for row_index in range(5):
             row = []
-            for element in set:
+            for element in dice_set:
                 face = getattr(element, "face")
                 row.append(face[row_index])
             hand_rows.append(" ".join(row))
