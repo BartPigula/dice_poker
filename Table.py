@@ -33,8 +33,47 @@ class Table:
         values_counter = [0, 0, 0, 0, 0, 0]
         # count all dice values in a set
         for dice in self.all_dice[turn]:
-            values_counter[getattr(dice, "value")-1] += 1
-
+            values_counter[getattr(dice, "value") - 1] += 1
+        hand_name = ""
+        if [1, 1, 1, 1, 1] in values_counter:
+            if values_counter[0] == 0:
+                hand_name = "higher straight"
+                hand_value = 23456
+            else:
+                hand_name = "lower straight"
+                hand_value = 12345
+        else:
+            for value, count in enumerate(values_counter):
+                if count == 5:
+                    hand_name = "five of a kind"
+                    hand_value = value + 1
+                    break
+                elif count == 4:
+                    hand_name = "four of a kind"
+                    hand_value = value + 1
+                    break
+                elif count == 3:
+                    for tmp_val, tmp_count in enumerate(values_counter):
+                        if tmp_count == 2:
+                            hand_name = "full house"
+                            hand_value = (value + 1) * 10 + tmp_val + 1
+                            break
+                    if not hand_name:
+                        hand_name = "three of a kind"
+                        hand_value = value + 1
+                elif count == 2:
+                    for tmp_val, tmp_count in enumerate(values_counter):
+                        if tmp_val != value and tmp_count == 2:
+                            hand_name = "two pairs"
+                            hand_value = (tmp_val + 1) * 10 + value + 1
+                            break
+                    if not hand_name:
+                        hand_name = "one pair"
+                        hand_value = value + 1
+            if not hand_name:
+                hand_name = "bust"
+                hand_value = 6
+        return (hand_name, hand_value)
 
     def parse_input(self, user_input, turn):
         passed = False
@@ -58,16 +97,16 @@ class Table:
         else:
             print("\nChosen wait\n")
         if not passed:
-            print(f"\nPlayer {turn+1}'s final hand:")
+            print(f"\nPlayer {turn + 1}'s final hand:")
             self.print_hand(self.all_dice[turn])
-            self.hand_result(turn)
+            print(self.hand_result(turn))
 
     def choose_move(self, turn):
         user_input = input(self.next_move_string)
         self.parse_input(user_input, turn)
 
     def re_roll(self, number, turn):
-        self.all_dice[turn][number-1].roll()
+        self.all_dice[turn][number - 1].roll()
 
     def choose_winner(self):
         pass
